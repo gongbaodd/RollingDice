@@ -5,13 +5,15 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run copy",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "copy": "cpx index.js dist"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "cpx": "^1.5.0",
     "vite": "^5.4.11"
   }
 }
