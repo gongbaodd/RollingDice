@@ -91,8 +91,8 @@
         var sceneToRender = null;
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
         var createScene = function () {
-            var scene = new BABYLON.Scene(engine); 
-            scene.clearColor = new BABYLON.Color4(0, 0, 0, 0); 
+            var scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
             // camera
             var camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, Math.PI / 2.2, 5, new BABYLON.Vector3(0, 0, 0), scene);
@@ -107,6 +107,20 @@
             var pl = new BABYLON.PointLight("pl", BABYLON.Vector3.Zero(), scene);
             pl.intensity = 0.5;
 
+
+            // Ground
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
+            ground.position.y = -1;
+            // Create a transparent material
+            const transparentMaterial = new BABYLON.StandardMaterial("transparentMaterial", scene);
+            transparentMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // White color
+            transparentMaterial.alpha = 0.0; // Set transparency (0 = fully transparent, 1 = opaque)
+
+            // Assign the material to the ground
+            ground.material = transparentMaterial;
+
+            // Enable depth pre-pass for proper transparency rendering
+            transparentMaterial.needDepthPrePass = true;
 
 
             let model
