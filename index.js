@@ -44,12 +44,12 @@ var createScene = function () {
 
 
     // Ground
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
     ground.position.y = -1;
     // Create a transparent material
     const transparentMaterial = new BABYLON.StandardMaterial("transparentMaterial", scene);
     transparentMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // White color
-    transparentMaterial.alpha = 0.9; // Set transparency (0 = fully transparent, 1 = opaque)
+    transparentMaterial.alpha = 0.0; // Set transparency (0 = fully transparent, 1 = opaque)
     // Assign the material to the ground
     ground.material = transparentMaterial;
     // Enable depth pre-pass for proper transparency rendering
@@ -62,21 +62,32 @@ var createScene = function () {
         scene
     );
 
+    const dice = BABYLON.MeshBuilder.CreateBox("dice", { size: 1 }, scene);
+    // Assign physics to the dice
+    dice.physicsImpostor = new BABYLON.PhysicsImpostor(
+        dice,
+        BABYLON.PhysicsImpostor.BoxImpostor,
+        { mass: 1, restitution: 0.6 },
+        scene
+    );
 
-    let model
+
     let physicsImpostor
     getModel(scene).then(m => {
         model = m
+        const root = m.meshes.find(function (mesh) {return mesh.name === "__root__"});
 
-        const cube = scene.getMeshByName("Cube")
+        root.parent = dice;
+        root.scaling = new BABYLON.Vector3(0.52, 0.52, 0.52);
+
         // Assign physics to the dice
         physicsImpostor = new BABYLON.PhysicsImpostor(
-            cube,
+            root,
             BABYLON.PhysicsImpostor.BoxImpostor,
             { mass: 1, restitution: 0.6 },
             scene
         );
-        cube.physicsImpostor = physicsImpostor;
+        root.physicsImpostor = physicsImpostor;
     })
 
     const fileInput = document.getElementById("uvMapUpload");
@@ -112,17 +123,27 @@ var createScene = function () {
     scene.preventDefaultOnPointerDown = false;
     scene.preventDefaultOnPointerUp = false;
 
+    scene.registerBeforeRender(() => {
+        // Update camera position to follow the dice
+        camera.position.x = dice.position.x + 5; // Offset for better viewing
+        camera.position.y = dice.position.y + 5;
+        camera.position.z = dice.position.z + 5;
+    
+        // Optional: Make the camera always look at the dice
+        camera.setTarget(dice.position);
+    });
+
     return scene;
 };
 
 function rollDice() {
-    const dice = scene.getMeshByName("Cube")
+    const dice = scene.getMeshByName("dice")
 
     // Random force and torque
     const force = new BABYLON.Vector3(
-        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 1,
         Math.random() * 10 + 5,
-        (Math.random() - 0.5) * 10
+        (Math.random() - 0.5) * 1
     );
 
     const torque = new BABYLON.Vector3(
