@@ -93,6 +93,8 @@
         var createScene = function () {
             var scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+            // Enable the physics engine
+            scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
 
             // camera
             var camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, Math.PI / 2.2, 5, new BABYLON.Vector3(0, 0, 0), scene);
@@ -114,30 +116,40 @@
             // Create a transparent material
             const transparentMaterial = new BABYLON.StandardMaterial("transparentMaterial", scene);
             transparentMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // White color
-            transparentMaterial.alpha = 0.0; // Set transparency (0 = fully transparent, 1 = opaque)
-
+            transparentMaterial.alpha = 0.9; // Set transparency (0 = fully transparent, 1 = opaque)
             // Assign the material to the ground
             ground.material = transparentMaterial;
-
             // Enable depth pre-pass for proper transparency rendering
             transparentMaterial.needDepthPrePass = true;
+            // Assign physics to the ground
+            ground.physicsImpostor = new BABYLON.PhysicsImpostor(
+                ground,
+                BABYLON.PhysicsImpostor.BoxImpostor,
+                { mass: 0, restitution: 0.6 },
+                scene
+            );
 
 
             let model
+            let physicsImpostor
             getModel(scene).then(m => {
                 model = m
 
-                console.log(model)
+                const cube = scene.getMeshByName("Cube")
+                // Assign physics to the dice
+                physicsImpostor = new BABYLON.PhysicsImpostor(
+                    cube,
+                    BABYLON.PhysicsImpostor.BoxImpostor,
+                    { mass: 1, restitution: 0.6 },
+                    scene
+                );
+                cube.physicsImpostor = physicsImpostor;
             })
 
             const fileInput = document.getElementById("uvMapUpload");
 
             fileInput.addEventListener("change", function (event) {
                 const file = event.target.files[0];
-
-                console.log(file)
-
-
                 if (file) {
                     const reader = new FileReader(file);
 
@@ -155,9 +167,6 @@
                         // Apply the texture to the mesh material
 
                         const cube = scene.getMeshByName("Cube")
-                        console.log(cube)
-
-
 
                         cube.material = material
 
@@ -173,8 +182,30 @@
             return scene;
         };
 
+        function rollDice() {
+            const dice = scene.getMeshByName("Cube")
 
+            // Random force and torque
+            const force = new BABYLON.Vector3(
+                (Math.random() - 0.5) * 10,
+                Math.random() * 10 + 5,
+                (Math.random() - 0.5) * 10
+            );
 
+            const torque = new BABYLON.Vector3(
+                (Math.random() - 0.5) * 10,
+                (Math.random() - 0.5) * 10,
+                (Math.random() - 0.5) * 10
+            );
+
+            console.log(dice.physicsImpostor.applyImpulse)
+
+            // Apply force and torque
+            dice.physicsImpostor.applyImpulse(force, dice.getAbsolutePosition());
+        }
+
+        // Call rollDice on user interaction
+        canvas.addEventListener("click", rollDice, false);
 
         window.initFunction = async function () {
             var asyncEngineCreation = async function () {
